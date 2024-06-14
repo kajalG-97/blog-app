@@ -1,8 +1,3 @@
-// create post
-// update - put
-// get - posts
-// delete - by author, not user
-
 import { Post } from "../models/Post.js";
 
 export const createPost = async (req, res) => {
@@ -20,6 +15,7 @@ export const createPost = async (req, res) => {
 export const updatePost = async (req, res) => {
   console.log("author: req.user._id", req.user._id, req.params.postId);
   try {
+    // Find the post by id and author to ensure only the author can update it
     const post = await Post.findByIdAndUpdate(
       { _id: req.params.postId, author: { _id: req.user._id } },
       req.body,
@@ -31,14 +27,14 @@ export const updatePost = async (req, res) => {
 
     if (!post) {
       return res.status(404).json({
-        message: "post not found",
+        message: "Post not found or user not authorized",
       });
     }
 
     return res.status(200).json({ post });
   } catch (error) {
     return res.status(500).json({
-      message: "update failed",
+      message: "Update failed",
       error,
     });
   }
@@ -48,29 +44,20 @@ export const getPosts = async (req, res) => {
   try {
     const posts = await Post.find()
       .populate("author")
-      .populate({ path: "likes" })
+      .populate({
+        path: "likes",
+        populate: { path: "user" }, // Populate user within likes
+      })
+      .populate({
+        path: "comments",
+        populate: [
+          { path: "author" },
+          { path: "replies", populate: { path: "author" } }, // Populate author within replies
+        ],
+      })
       .lean()
-      //   .populate({
-      //     path: "likes",
-      //     populate: { path: "user" },
-      //   })
-      //   .populate({
-      //     path: "comments",
-      //     populate: [
-      //       { path: "author" },
-      //       { path: "replies", populate: { path: "author" } },
-      //     ],
-      //   })
       .exec();
-    // const post = await Post.find().populate("author").exec();
-    //   .populate({
-    //     path: "comments",
-    //     populate: [
-    //       { path: "author" },
-    //       { path: "replies", populate: { path: "author" } },
-    //     ],
-    //   });
-    //   .lean().limit(10)
+
     return res.status(200).json({ posts });
   } catch (error) {
     return res.status(500).json({
