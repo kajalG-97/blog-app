@@ -42,7 +42,8 @@ export const login = async (req, res) => {
       req.body.password,
       user.password
     );
-    if (!comparePassword) res.status(400).send("Incorrect password or mail");
+    if (!comparePassword)
+      return res.status(400).send("Incorrect password or mail");
 
     // generate token
     const token = generateToken(user);

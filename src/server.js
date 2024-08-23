@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import authRouter from "./routes/authRoutes.js";
@@ -12,11 +13,13 @@ dotenv.config();
 
 const port = 4532;
 
+app.use(cors());
+
 app.use(express.json());
 
 app.use("/", authRouter);
 app.use("/posts", authorizationMiddleware, postRouter);
-app.use("/comments", authorizationMiddleware, commentRouter);
+app.use("/posts/:postId/comments", authorizationMiddleware, commentRouter);
 app.use("/likes", authorizationMiddleware, likeRouter);
 
 mongoose
